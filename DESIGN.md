@@ -177,11 +177,11 @@ Build the page-specific screens from the following reusable pieces:
 | `EmptyState` | Not found, empty results, and recoverable failure layouts. |
 | Feedback primitives | Toast/sonner for transient feedback, inline alert for actionable errors, skeletons for loading. |
 
-Use shadcn/ui components backed by Radix primitives and style them in the
-product theme: `Button`, `Card`, `Input`, `Textarea`, `Badge`, `AlertDialog`,
-`Tooltip`, `Skeleton`, `Toast`/Sonner, and `ScrollArea`. Native semantics remain
-the source of truth; wrappers must not remove labels, focus handling, or dialog
-behaviour supplied by the primitives.
+Use shadcn/ui components backed by Radix primitives and style them with
+Tailwind CSS v4 in the product theme: `Button`, `Card`, `Input`, `Textarea`,
+`Badge`, `AlertDialog`, `Tooltip`, `Skeleton`, `Toast`/Sonner, and `ScrollArea`.
+Native semantics remain the source of truth; wrappers must not remove labels,
+focus handling, or dialog behaviour supplied by the primitives.
 
 ## Visual direction
 
@@ -192,9 +192,15 @@ content or reduces contrast.
 
 ### Semantic tokens
 
-Implement tokens as CSS custom properties consumed by Tailwind CSS v4 theme
-utilities. These values are a starting palette and must be contrast-checked in
-their final text/background pairing.
+Tailwind CSS v4 is the required frontend styling system. It is configured with
+`@tailwindcss/vite`, imported from the global stylesheet, and uses these
+semantic tokens as Tailwind theme variables to produce meaningful utilities
+such as `bg-canvas`, `text-ink`, `border-border`, and `bg-primary`. Use
+utilities for component layout, typography, responsive variants,
+interaction states, and reduced-motion handling. Keep authored CSS to global
+base rules and decorative pseudo-elements or artwork that cannot be expressed
+cleanly as utilities. These values are a starting palette and must be
+contrast-checked in their final text/background pairing.
 
 | Token | Suggested value | Use |
 | --- | --- | --- |
