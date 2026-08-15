@@ -49,7 +49,11 @@ export function CreatePollForm() {
         question: question.trim(),
         ...(trimmedDescription ? { description: trimmedDescription } : {}),
       });
-      navigate(`/polls/${encodeURIComponent(pollId)}`);
+      // TODO: Replace transient router state with backend-provided viewer ownership.
+      // Refreshing intentionally loses this MVP-only creator signal.
+      navigate(`/polls/${encodeURIComponent(pollId)}`, {
+        state: { isCreator: true },
+      });
     } catch {
       setFormError(
         'We couldn’t launch your poll just now. Your words are safe—please try again.'

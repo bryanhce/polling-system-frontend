@@ -93,8 +93,7 @@ error message with a retry action.
 The poll page begins with a `PollHeader` and `QuestionCard`:
 
 - The question is the page `h1`; description is rendered only when supplied.
-- `LiveStatus` announces **Live** with a non-colour status indicator, while
-  `PollMeta` shows the answer count.
+- `LiveStatus` announces **Live** with a non-colour status indicator
 - Copy describes the feed as anonymized; do not fabricate names, avatars, or
   individual identity metadata.
 
