@@ -50,6 +50,9 @@ export function AnswerComposer({
       >
         Add your voice
       </h2>
+      <p className="mt-2 mb-0 text-sm leading-[1.45] text-muted-ink">
+        Answers are anonymous — share what you think.
+      </p>
       <form className="mt-4" onSubmit={handleSubmit} noValidate>
         <label
           className="mb-2 block text-[0.94rem] font-extrabold text-ink"

@@ -35,9 +35,6 @@ export function QuestionCard({
           {poll.description}
         </p>
       ) : null}
-      <p className="mt-5 mb-0 text-sm leading-[1.45] text-muted-ink">
-        Answers are anonymous — share what you think.
-      </p>
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-5">
         <LiveStatus status={poll.status} />
         <div className="flex flex-wrap gap-2 sm:ml-auto">
