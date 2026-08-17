@@ -1,5 +1,5 @@
-import type { Poll } from '../../api/polls';
-import { LiveStatus } from './LiveStatus';
+import type { Poll } from '@/api/polls';
+import { LiveStatus } from '@/components/activePollPage/LiveStatus';
 
 interface QuestionCardProps {
   poll: Poll;

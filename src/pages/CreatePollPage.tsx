@@ -1,6 +1,6 @@
-import { CreatePollForm } from '../components/createPollPage/CreatePollForm';
-import { CreatePollHeader } from '../components/createPollPage/CreatePollHeader';
-import { CreatePollIntroduction } from '../components/createPollPage/CreatePollIntroduction';
+import { CreatePollForm } from '@/components/createPollPage/CreatePollForm';
+import { CreatePollHeader } from '@/components/createPollPage/CreatePollHeader';
+import { CreatePollIntroduction } from '@/components/createPollPage/CreatePollIntroduction';
 
 export function CreatePollPage() {
   return (

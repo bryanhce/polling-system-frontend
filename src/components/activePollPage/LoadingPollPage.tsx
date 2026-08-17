@@ -1,4 +1,4 @@
-import { PageFrame } from './PageFrame';
+import { PageFrame } from '@/components/activePollPage/PageFrame';
 
 export function LoadingPollPage() {
   return (

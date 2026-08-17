@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { createPoll } from '../../api/polls';
-import { PollTextarea } from './PollTextarea';
+import { createPoll } from '@/api/polls';
+import { PollTextarea } from '@/components/createPollPage/PollTextarea';
 
 const QUESTION_LIMIT = 500;
 const DESCRIPTION_LIMIT = 2000;

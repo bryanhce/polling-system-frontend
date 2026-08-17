@@ -6,8 +6,8 @@ import {
   getPoll,
   getPollAnswers,
   submitPollAnswer,
-} from '../../api/polls';
-import type { Poll, PollAnswer } from '../../api/polls';
+} from '@/api/polls';
+import type { Poll, PollAnswer } from '@/api/polls';
 
 const ANSWER_PAGE_SIZE = 20;
 

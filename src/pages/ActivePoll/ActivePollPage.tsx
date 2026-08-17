@@ -1,14 +1,14 @@
-import { AnswerComposer } from '../../components/activePollPage/AnswerComposer';
-import { AnswerFeed } from '../../components/activePollPage/AnswerFeed';
-import { ClosePollDialog } from '../../components/activePollPage/ClosePollDialog';
-import { ClosedPollNotice } from '../../components/activePollPage/ClosedPollNotice';
-import { EmptyState } from '../../components/activePollPage/EmptyState';
-import { LoadingPollPage } from '../../components/activePollPage/LoadingPollPage';
-import { PageFrame } from '../../components/activePollPage/PageFrame';
-import { PollHeader } from '../../components/activePollPage/PollHeader';
-import { QuestionCard } from '../../components/activePollPage/QuestionCard';
-import { SubmittedAnswerConfirmation } from '../../components/activePollPage/SubmittedAnswerConfirmation';
-import { useActivePollPage } from './useActivePollPage';
+import { AnswerComposer } from '@/components/activePollPage/AnswerComposer';
+import { AnswerFeed } from '@/components/activePollPage/AnswerFeed';
+import { ClosePollDialog } from '@/components/activePollPage/ClosePollDialog';
+import { ClosedPollNotice } from '@/components/activePollPage/ClosedPollNotice';
+import { EmptyState } from '@/components/activePollPage/EmptyState';
+import { LoadingPollPage } from '@/components/activePollPage/LoadingPollPage';
+import { PageFrame } from '@/components/activePollPage/PageFrame';
+import { PollHeader } from '@/components/activePollPage/PollHeader';
+import { QuestionCard } from '@/components/activePollPage/QuestionCard';
+import { SubmittedAnswerConfirmation } from '@/components/activePollPage/SubmittedAnswerConfirmation';
+import { useActivePollPage } from '@/pages/ActivePoll/useActivePollPage';
 
 export function ActivePollPage() {
   const {

@@ -1,4 +1,4 @@
-import type { PollAnswer } from '../../api/polls';
+import type { PollAnswer } from '@/api/polls';
 
 interface AnswerFeedProps {
   answers: PollAnswer[];

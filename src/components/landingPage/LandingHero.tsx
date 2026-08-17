@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { ConversationArtwork } from './ConversationArtwork';
+import { ConversationArtwork } from '@/components/landingPage/ConversationArtwork';
 
 export function LandingHero() {
   return (

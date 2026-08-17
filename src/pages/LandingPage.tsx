@@ -1,7 +1,7 @@
-import { JoinPollSection } from '../components/landingPage/JoinPollSection';
-import { LandingFooter } from '../components/landingPage/LandingFooter';
-import { LandingHeader } from '../components/landingPage/LandingHeader';
-import { LandingHero } from '../components/landingPage/LandingHero';
+import { JoinPollSection } from '@/components/landingPage/JoinPollSection';
+import { LandingFooter } from '@/components/landingPage/LandingFooter';
+import { LandingHeader } from '@/components/landingPage/LandingHeader';
+import { LandingHero } from '@/components/landingPage/LandingHero';
 
 export function LandingPage() {
   return (

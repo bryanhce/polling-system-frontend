@@ -1,8 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
-import './App.css';
-import { CreatePollPage } from './pages/CreatePollPage';
-import { LandingPage } from './pages/LandingPage';
-import { ActivePollPage } from './pages/ActivePoll/ActivePollPage';
+import '@/App.css';
+import { ActivePollPage } from '@/pages/ActivePoll/ActivePollPage';
+import { CreatePollPage } from '@/pages/CreatePollPage';
+import { LandingPage } from '@/pages/LandingPage';
 
 function App() {
   return (

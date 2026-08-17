@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { BrandLink } from '../shared/BrandLink';
+import { BrandLink } from '@/components/shared/BrandLink';
 
 export function CreatePollHeader() {
   return (
