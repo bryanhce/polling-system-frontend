@@ -26,7 +26,7 @@ export function ClosePollDialog({
 
   return (
     <dialog
-      className="w-[calc(100%-2rem)] max-w-md rounded-3xl border border-border bg-surface p-0 text-ink shadow-[0_22px_60px_rgba(23,33,58,0.24)] backdrop:bg-ink/35"
+      className="fixed top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-border bg-surface p-0 text-ink shadow-[0_22px_60px_rgba(23,33,58,0.24)] backdrop:bg-ink/35"
       ref={dialogRef}
       aria-labelledby="close-poll-title"
       onCancel={(event) => {

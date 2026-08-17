@@ -52,6 +52,7 @@ export function ActivePollPage() {
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [closeError, setCloseError] = useState('');
+  const [copyLabel, setCopyLabel] = useState('Copy link');
 
   const loadInitial = useCallback(async () => {
     if (!pollId) {
@@ -91,7 +92,6 @@ export function ActivePollPage() {
       setPoll(nextPoll);
       setAnswers(nextAnswers);
       setCanLoadMore(nextAnswers.length === ANSWER_PAGE_SIZE);
-      setPageState('ready');
     } catch (error) {
       if (statusCode(error) === 404) {
         setPageState('not-found');
@@ -197,6 +197,15 @@ export function ActivePollPage() {
     }
   }
 
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopyLabel('Link copied');
+    } catch {
+      setCopyLabel('Couldn’t copy');
+    }
+  }
+
   if (pageState === 'loading') {
     return <LoadingPollPage />;
   }
@@ -230,26 +239,23 @@ export function ActivePollPage() {
   const canClose = isCreator && poll.status === 'active';
 
   return (
-    <div className="relative isolate flex min-h-svh flex-col overflow-hidden bg-canvas">
+    <div className="relative isolate flex min-h-svh flex-col overflow-x-hidden bg-canvas">
       <div
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
         aria-hidden="true"
       >
-        <span className="absolute top-[18%] left-[4%] size-4 rounded-full bg-highlight" />
-        <span className="absolute top-[32%] right-[5%] size-7 rounded-full bg-secondary/80" />
-        <span className="absolute right-[11%] bottom-[11%] text-4xl text-primary">
-          ✦
-        </span>
       </div>
-      <PollHeader
-        status={poll.status}
-        canClose={canClose}
-        onCloseRequest={() => setIsCloseDialogOpen(true)}
-      />
+      <PollHeader />
       <main className="mx-auto w-full max-w-290 flex-1 px-4 py-7 sm:px-8 sm:py-10 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:items-start lg:gap-12">
           <div className="min-w-0 lg:sticky lg:top-7">
-            <QuestionCard poll={poll} />
+            <QuestionCard
+              poll={poll}
+              canClose={canClose}
+              copyLabel={copyLabel}
+              onCloseRequest={() => setIsCloseDialogOpen(true)}
+              onCopyLink={() => void handleCopyLink()}
+            />
             {poll.status === 'active' && !hasAnswered ? (
               <AnswerComposer
                 isSubmitting={isSubmittingAnswer}
