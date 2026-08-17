@@ -31,7 +31,7 @@ export function QuestionCard({
         {poll.question}
       </h1>
       {poll.description ? (
-        <p className="mt-5 mb-0 text-[1rem] leading-[1.6] text-muted-ink">
+        <p className="mt-5 mb-0 max-h-48 overflow-y-auto pr-2 text-[1rem] leading-[1.6] text-muted-ink">
           {poll.description}
         </p>
       ) : null}
