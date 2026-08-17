@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import './App.css';
 import { CreatePollPage } from './pages/CreatePollPage';
 import { LandingPage } from './pages/LandingPage';
-import { ActivePollPage } from './pages/ActivePollPage';
+import { ActivePollPage } from './pages/ActivePoll/ActivePollPage';
 
 function App() {
   return (

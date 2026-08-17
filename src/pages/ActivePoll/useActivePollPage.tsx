@@ -6,18 +6,8 @@ import {
   getPoll,
   getPollAnswers,
   submitPollAnswer,
-} from '../api/polls';
-import { AnswerComposer } from '../components/activePollPage/AnswerComposer';
-import { AnswerFeed } from '../components/activePollPage/AnswerFeed';
-import { ClosePollDialog } from '../components/activePollPage/ClosePollDialog';
-import { ClosedPollNotice } from '../components/activePollPage/ClosedPollNotice';
-import { EmptyState } from '../components/activePollPage/EmptyState';
-import { LoadingPollPage } from '../components/activePollPage/LoadingPollPage';
-import { PageFrame } from '../components/activePollPage/PageFrame';
-import { PollHeader } from '../components/activePollPage/PollHeader';
-import { QuestionCard } from '../components/activePollPage/QuestionCard';
-import { SubmittedAnswerConfirmation } from '../components/activePollPage/SubmittedAnswerConfirmation';
-import type { Poll, PollAnswer } from '../api/polls';
+} from '../../api/polls';
+import type { Poll, PollAnswer } from '../../api/polls';
 
 const ANSWER_PAGE_SIZE = 20;
 
@@ -29,7 +19,7 @@ function statusCode(error: unknown): number | undefined {
   return isAxiosError(error) ? error.response?.status : undefined;
 }
 
-export function ActivePollPage() {
+export function useActivePollPage() {
   const { pollId } = useParams();
   const location = useLocation();
   const isCreator = Boolean(
@@ -59,7 +49,6 @@ export function ActivePollPage() {
       setPageState('not-found');
       return;
     }
-
     setPageState('loading');
     setFeedError('');
     try {
@@ -93,13 +82,11 @@ export function ActivePollPage() {
       setAnswers(nextAnswers);
       setCanLoadMore(nextAnswers.length === ANSWER_PAGE_SIZE);
     } catch (error) {
-      if (statusCode(error) === 404) {
-        setPageState('not-found');
-      } else {
+      if (statusCode(error) === 404) setPageState('not-found');
+      else
         setFeedError(
           'We couldn’t refresh the answers just now. Please try again.'
         );
-      }
     } finally {
       setIsRefreshing(false);
     }
@@ -206,94 +193,40 @@ export function ActivePollPage() {
     }
   }
 
-  if (pageState === 'loading') {
-    return <LoadingPollPage />;
-  }
-
-  if (pageState === 'not-found') {
-    return (
-      <PageFrame>
-        <EmptyState
-          title="We couldn’t find that poll."
-          description="Check the link or enter another poll ID to join a conversation."
-        />
-      </PageFrame>
-    );
-  }
-
-  if (pageState === 'error' || !poll) {
-    return (
-      <PageFrame>
-        <EmptyState
-          title="We couldn’t load this poll."
-          description="Please check your connection and try again."
-          retryLabel="Try again"
-          onRetry={() => void loadInitial()}
-        />
-      </PageFrame>
-    );
+  function handleCloseDialogCancel() {
+    setIsCloseDialogOpen(false);
+    setCloseError('');
   }
 
   // TODO: Replace transient navigation state with API-provided creator permissions.
   // The close action intentionally vanishes on refresh until viewer identity exists.
-  const canClose = isCreator && poll.status === 'active';
+  const canClose = isCreator && poll?.status === 'active';
 
-  return (
-    <div className="relative isolate flex min-h-svh flex-col overflow-x-hidden bg-canvas">
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-        aria-hidden="true"
-      >
-      </div>
-      <PollHeader />
-      <main className="mx-auto w-full max-w-290 flex-1 px-4 py-7 sm:px-8 sm:py-10 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:items-start lg:gap-12">
-          <div className="min-w-0 lg:sticky lg:top-7">
-            <QuestionCard
-              poll={poll}
-              canClose={canClose}
-              copyLabel={copyLabel}
-              onCloseRequest={() => setIsCloseDialogOpen(true)}
-              onCopyLink={() => void handleCopyLink()}
-            />
-            {poll.status === 'active' && !hasAnswered ? (
-              <AnswerComposer
-                isSubmitting={isSubmittingAnswer}
-                error={answerError}
-                onSubmit={handleAnswerSubmit}
-              />
-            ) : null}
-            {poll.status === 'active' && hasAnswered ? (
-              <SubmittedAnswerConfirmation focusOnMount={focusConfirmation} />
-            ) : null}
-            {poll.status === 'closed' ? (
-              <ClosedPollNotice message={closedMessage} />
-            ) : null}
-          </div>
-          <div className="min-w-0">
-            <AnswerFeed
-              answers={answers}
-              isLoading={false}
-              isRefreshing={isRefreshing}
-              error={feedError}
-              canLoadMore={canLoadMore}
-              isLoadingMore={isLoadingMore}
-              onRefresh={() => void refreshAnswers()}
-              onLoadMore={() => void loadMoreAnswers()}
-            />
-          </div>
-        </div>
-      </main>
-      <ClosePollDialog
-        isOpen={isCloseDialogOpen}
-        isClosing={isClosing}
-        error={closeError}
-        onCancel={() => {
-          setIsCloseDialogOpen(false);
-          setCloseError('');
-        }}
-        onConfirm={() => void handleClosePoll()}
-      />
-    </div>
-  );
+  return {
+    poll,
+    answers,
+    pageState,
+    feedError,
+    isRefreshing,
+    isLoadingMore,
+    canLoadMore,
+    answerError,
+    isSubmittingAnswer,
+    hasAnswered,
+    focusConfirmation,
+    closedMessage,
+    isCloseDialogOpen,
+    isClosing,
+    closeError,
+    copyLabel,
+    canClose,
+    loadInitial,
+    refreshAnswers,
+    loadMoreAnswers,
+    handleAnswerSubmit,
+    handleClosePoll,
+    handleCopyLink,
+    handleCloseDialogCancel,
+    openClosePollDialog: () => setIsCloseDialogOpen(true),
+  };
 }

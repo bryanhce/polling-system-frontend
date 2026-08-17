@@ -2,7 +2,6 @@ import type { PollAnswer } from '../../api/polls';
 
 interface AnswerFeedProps {
   answers: PollAnswer[];
-  isLoading: boolean;
   isRefreshing: boolean;
   error: string;
   canLoadMore: boolean;
@@ -13,7 +12,6 @@ interface AnswerFeedProps {
 
 export function AnswerFeed({
   answers,
-  isLoading,
   isRefreshing,
   error,
   canLoadMore,
@@ -39,7 +37,7 @@ export function AnswerFeed({
           className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-3.5 text-sm font-extrabold text-ink transition-colors hover:bg-[#f6f8fc] disabled:cursor-not-allowed disabled:opacity-60"
           type="button"
           onClick={onRefresh}
-          disabled={isRefreshing || isLoading}
+          disabled={isRefreshing}
         >
           Refresh answers
         </button>
@@ -49,12 +47,9 @@ export function AnswerFeed({
           className="m-0 text-sm leading-[1.45] text-muted-ink"
           aria-live="polite"
         >
-          {isLoading
-            ? 'Loading answers…'
-            : `${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} loaded. Refresh to see the latest answers.`}
+          {`${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} loaded. Refresh to see the latest answers.`}
         </p>
-        {isLoading ? <FeedSkeleton /> : null}
-        {!isLoading && error ? (
+        {error ? (
           <div
             className="mt-5 rounded-2xl border border-danger/35 bg-[#fff1f2] p-4 text-[#a62c3b]"
             role="alert"
@@ -70,7 +65,7 @@ export function AnswerFeed({
           </div>
         ) : null}
 
-        {!isLoading && !error && answers.length === 0 ? (
+        {!error && answers.length === 0 ? (
           <div className="mt-5 rounded-3xl border border-dashed border-secondary/45 bg-[#effcfc] p-6 text-center">
             <span className="text-3xl text-secondary" aria-hidden="true">
               ✦
@@ -83,8 +78,8 @@ export function AnswerFeed({
             </p>
           </div>
         ) : null}
-        
-        {!isLoading && !error && answers.length > 0 ? (
+
+        {!error && answers.length > 0 ? (
           <ol className="mt-5 list-none space-y-3 p-0">
             {answers.map((item, index) => (
               <li
@@ -108,15 +103,5 @@ export function AnswerFeed({
         ) : null}
       </div>
     </section>
-  );
-}
-
-function FeedSkeleton() {
-  return (
-    <div className="mt-5 space-y-3" aria-label="Loading answers">
-      {[0, 1, 2].map((item) => (
-        <div className="h-20 animate-pulse rounded-2xl bg-surface" key={item} />
-      ))}
-    </div>
   );
 }
