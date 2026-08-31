@@ -16,7 +16,7 @@ The development server defaults to `http://localhost:5173`.
 ```bash
 npm run build
 npm run lint
-npm run preview
+npm run test
 ```
 
 ## Styling approach

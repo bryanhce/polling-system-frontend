@@ -161,7 +161,7 @@ export function useActivePollPage() {
         setPageState('not-found');
       } else {
         setAnswerError(
-          'We couldn’t send your answer just now. Your words are still here—please try again.'
+          'We couldn’t send your answer just now. Your words are still here, please try again.'
         );
       }
     } finally {
