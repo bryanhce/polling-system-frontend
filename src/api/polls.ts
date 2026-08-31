@@ -16,20 +16,23 @@ export interface PollAnswer {
   answer: string;
 }
 
-interface CreatePollResponse {
+export interface CreatePollResponse {
   pollId: string;
+  creatorToken: string;
 }
 
 interface ListAnswersResponse {
   answers: PollAnswer[];
 }
 
-export async function createPoll(request: CreatePollRequest): Promise<string> {
+export async function createPoll(
+  request: CreatePollRequest
+): Promise<CreatePollResponse> {
   const response = await apiClient.post<CreatePollResponse>(
     '/api/v1/polls',
     request
   );
-  return response.data.pollId;
+  return response.data;
 }
 
 export async function getPoll(pollId: string): Promise<Poll> {
@@ -60,6 +63,20 @@ export async function submitPollAnswer(
   });
 }
 
-export async function closePoll(pollId: string): Promise<void> {
-  await apiClient.patch(`/api/v1/polls/${encodeURIComponent(pollId)}/close`);
+export async function closePoll(
+  pollId: string,
+  creatorToken?: string
+): Promise<void> {
+  await apiClient.patch(
+    `/api/v1/polls/${encodeURIComponent(pollId)}/close`,
+    undefined,
+    creatorToken
+      ? {
+          headers: {
+            'x-creator-token': creatorToken,
+          },
+        }
+      : undefined
+  );
 }
+

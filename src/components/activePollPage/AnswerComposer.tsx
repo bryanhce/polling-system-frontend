@@ -51,7 +51,7 @@ export function AnswerComposer({
         Add your voice
       </h2>
       <p className="mt-2 mb-0 text-sm leading-[1.45] text-muted-ink">
-        Answers are anonymous — share what you think.
+        Answers are anonymous. Share what you think.
       </p>
       <form className="mt-4" onSubmit={handleSubmit} noValidate>
         <label

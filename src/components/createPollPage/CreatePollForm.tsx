@@ -45,18 +45,20 @@ export function CreatePollForm() {
     if (nextQuestionError || nextDescriptionError) return;
     setIsSubmitting(true);
     try {
-      const pollId = await createPoll({
+      const { pollId, creatorToken } = await createPoll({
         question: question.trim(),
         ...(trimmedDescription ? { description: trimmedDescription } : {}),
       });
-      // TODO: Replace transient router state with backend-provided viewer ownership.
-      // Refreshing intentionally loses this MVP-only creator signal.
-      navigate(`/polls/${encodeURIComponent(pollId)}`, {
-        state: { isCreator: true },
-      });
+      try {
+        localStorage.setItem(`aethelgard-voice-${pollId}`, creatorToken);
+      } catch (error) {
+        // Best-effort storage for private browsing or restricted environments
+        console.error("Error setting creator token", error)
+      }
+      navigate(`/polls/${encodeURIComponent(pollId)}`);
     } catch {
       setFormError(
-        'We couldn’t launch your poll just now. Your words are safe—please try again.'
+        'We couldn’t launch your poll just now. Your words are safe, please try again.'
       );
     } finally {
       setIsSubmitting(false);

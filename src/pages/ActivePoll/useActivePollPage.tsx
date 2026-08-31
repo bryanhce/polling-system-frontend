@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import {
   closePoll,
   getPoll,
@@ -11,8 +11,22 @@ import type { Poll, PollAnswer } from '@/api/polls';
 
 const ANSWER_PAGE_SIZE = 20;
 
-interface PollLocationState {
-  isCreator?: boolean;
+function getStoredCreatorToken(id?: string): string | null {
+  if (!id) return null;
+  try {
+    return localStorage.getItem(`aethelgard-voice-${id}`);
+  } catch {
+    return null;
+  }
+}
+
+function removeStoredCreatorToken(id?: string) {
+  if (!id) return;
+  try {
+    localStorage.removeItem(`aethelgard-voice-${id}`);
+  } catch {
+    // Best-effort storage cleanup
+  }
 }
 
 function statusCode(error: unknown): number | undefined {
@@ -21,10 +35,15 @@ function statusCode(error: unknown): number | undefined {
 
 export function useActivePollPage() {
   const { pollId } = useParams();
-  const location = useLocation();
-  const isCreator = Boolean(
-    (location.state as PollLocationState | null)?.isCreator
+  const [creatorToken, setCreatorToken] = useState<string | null>(() =>
+    getStoredCreatorToken(pollId)
   );
+
+  useEffect(() => {
+    setCreatorToken(getStoredCreatorToken(pollId));
+  }, [pollId]);
+
+  const isCreator = Boolean(creatorToken);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [answers, setAnswers] = useState<PollAnswer[]>([]);
   const [pageState, setPageState] = useState<
@@ -155,7 +174,9 @@ export function useActivePollPage() {
     setCloseError('');
     setIsClosing(true);
     try {
-      await closePoll(pollId);
+      await closePoll(pollId, creatorToken ?? undefined);
+      removeStoredCreatorToken(pollId);
+      setCreatorToken(null);
       setPoll((current) =>
         current ? { ...current, status: 'closed' } : current
       );
@@ -167,6 +188,8 @@ export function useActivePollPage() {
         setIsCloseDialogOpen(false);
         setPageState('not-found');
       } else if (status === 409) {
+        removeStoredCreatorToken(pollId);
+        setCreatorToken(null);
         setPoll((current) =>
           current ? { ...current, status: 'closed' } : current
         );
@@ -174,6 +197,10 @@ export function useActivePollPage() {
           'This poll was already closed. The final answers are below.'
         );
         setIsCloseDialogOpen(false);
+      } else if (status === 403) {
+        removeStoredCreatorToken(pollId);
+        setCreatorToken(null);
+        setCloseError('Only this poll’s creator can close it.');
       } else {
         setCloseError(
           'We couldn’t close this poll just now. Please try again.'
@@ -198,8 +225,6 @@ export function useActivePollPage() {
     setCloseError('');
   }
 
-  // TODO: Replace transient navigation state with API-provided creator permissions.
-  // The close action intentionally vanishes on refresh until viewer identity exists.
   const canClose = isCreator && poll?.status === 'active';
 
   return {
