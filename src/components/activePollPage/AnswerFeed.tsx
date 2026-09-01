@@ -28,15 +28,15 @@ export function AnswerFeed({
           >
             Anonymous answers
           </h2>
+          <p
+            className="m-0 text-sm leading-[1.45] text-muted-ink"
+            aria-live="polite"
+          >
+            {`${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} heard.`}
+          </p>
         </div>
       </div>
-      <div className="mt-2 max-h-[calc(100svh-16rem)] overflow-y-auto pr-1 sm:pr-2">
-        <p
-          className="m-0 text-sm leading-[1.45] text-muted-ink"
-          aria-live="polite"
-        >
-          {`${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} heard.`}
-        </p>
+      <div className="mt-2 max-h-[calc(100svh-12rem)] overflow-y-auto pr-1 sm:pr-2">
         {error ? (
           <div
             className="mt-5 rounded-2xl border border-danger/35 bg-[#fff1f2] p-4 text-[#a62c3b]"
