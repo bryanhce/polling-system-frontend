@@ -5,3 +5,4 @@
 - Use configured path aliases for all imports; do not use relative import paths.
 - When writing tests, name test cases using the Given-When-Then pattern (e.g., `given [precondition], when [action], then [expected outcome]`).
 - Errors should always be thrown or logged, never silently suppressed.
+- When designing or styling UI components, reference `DESIGN.md` for visual guidelines, semantic design tokens, and Tailwind styling conventions.

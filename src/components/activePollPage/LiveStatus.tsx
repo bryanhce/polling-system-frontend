@@ -7,7 +7,7 @@ export function LiveStatus({ status }: LiveStatusProps) {
 
   return (
     <span
-      className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 text-[0.78rem] font-extrabold ${
+      className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 text-xs font-extrabold ${
         isLive ? 'bg-success/15 text-[#137255]' : 'bg-[#e9edf5] text-[#41506c]'
       }`}
       role="status"

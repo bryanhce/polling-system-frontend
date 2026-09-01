@@ -8,17 +8,17 @@ export function LandingHero() {
       aria-labelledby="landing-title"
     >
       <div className="max-w-160">
-        <p className="mb-3 text-[0.8rem] font-extrabold tracking-[0.12em] text-primary uppercase">
+        <p className="mb-3 text-xs font-extrabold tracking-[0.12em] text-primary uppercase">
           A fresh space to listen
         </p>
         <h1
           id="landing-title"
-          className="m-0 font-display text-[clamp(3rem,5.2vw,4.9rem)] font-bold tracking-[-0.065em] text-ink leading-[0.95]"
+          className="m-0 font-display text-5xl font-bold tracking-[-0.065em] text-ink leading-[0.95] sm:text-6xl lg:text-7xl"
         >
           Ask one good question.{' '}
           <em className="block not-italic text-primary">Hear every voice.</em>
         </h1>
-        <p className="mt-[1.45rem] mb-7 max-w-124 text-[clamp(1rem,1.5vw,1.125rem)] leading-[1.65] text-muted-ink">
+        <p className="mt-[1.45rem] mb-7 max-w-124 text-base leading-[1.65] text-muted-ink sm:text-lg">
           Make a quick poll, share it with your people, and let the honest
           answers roll in.
         </p>
@@ -34,7 +34,7 @@ export function LandingHero() {
             →
           </span>
         </Link>
-        <p className="mt-[1.15rem] text-[0.825rem] text-muted-ink">
+        <p className="mt-[1.15rem] text-xs text-muted-ink">
           No account. No setup. Just a good question.
         </p>
       </div>

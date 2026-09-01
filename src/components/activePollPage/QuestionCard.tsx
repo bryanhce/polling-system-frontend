@@ -21,17 +21,17 @@ export function QuestionCard({
       className="rounded-3xl border border-border bg-surface p-5 shadow-[10px_12px_0_rgba(109,61,242,0.1),0_16px_30px_rgba(23,33,58,0.07)] sm:p-7"
       aria-labelledby="poll-question"
     >
-      <p className="m-0 text-[0.78rem] font-extrabold tracking-[0.12em] text-primary uppercase">
+      <p className="m-0 text-xs font-extrabold tracking-[0.12em] text-primary uppercase">
         The question
       </p>
       <h1
-        className="mt-3 mb-0 font-display text-[clamp(2rem,5vw,3.1rem)] leading-[1.03] tracking-[-0.045em] text-ink"
+        className="mt-3 mb-0 font-display text-3xl leading-[1.03] tracking-[-0.045em] text-ink sm:text-4xl lg:text-5xl"
         id="poll-question"
       >
         {poll.question}
       </h1>
       {poll.description ? (
-        <p className="mt-5 mb-0 max-h-48 overflow-y-auto pr-2 text-[1rem] leading-[1.6] text-muted-ink">
+        <p className="mt-5 mb-0 max-h-48 overflow-y-auto pr-2 text-base leading-[1.6] text-muted-ink">
           {poll.description}
         </p>
       ) : null}

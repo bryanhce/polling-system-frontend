@@ -28,10 +28,10 @@ export function ConversationArtwork() {
         <span />
         <span />
       </div>
-      <span className="absolute top-[1%] left-[10%] text-[1.6rem] text-primary">
+      <span className="absolute top-[1%] left-[10%] text-2xl text-primary">
         ✦
       </span>
-      <span className="absolute right-1/2 bottom-[6%] text-[1.6rem] text-primary">
+      <span className="absolute right-1/2 bottom-[6%] text-2xl text-primary">
         ✦
       </span>
     </div>

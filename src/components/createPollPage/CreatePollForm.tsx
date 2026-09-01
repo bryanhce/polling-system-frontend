@@ -113,7 +113,7 @@ export function CreatePollForm() {
       </div>
       {formError ? (
         <div
-          className="mt-6 rounded-2xl border border-danger/35 bg-[#fff1f2] px-4 py-3 text-[0.9rem] font-semibold leading-[1.45] text-[#a62c3b]"
+          className="mt-6 rounded-2xl border border-danger/35 bg-[#fff1f2] px-4 py-3 text-sm font-semibold leading-[1.45] text-[#a62c3b]"
           id={submitErrorId}
           role="alert"
         >
@@ -128,7 +128,7 @@ export function CreatePollForm() {
         {isSubmitting ? 'Launching poll…' : 'Launch poll'}{' '}
         <span aria-hidden="true">{isSubmitting ? '…' : '→'}</span>
       </button>
-      <p className="mt-4 mb-0 text-center text-[0.8rem] leading-[1.4] text-muted-ink">
+      <p className="mt-4 mb-0 text-center text-xs leading-[1.4] text-muted-ink">
         You can share the link as soon as your poll launches.
       </p>
     </form>

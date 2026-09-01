@@ -47,18 +47,18 @@ export function JoinPollSection() {
       <div className="rounded-3xl border border-border/90 bg-surface p-[clamp(1.25rem,4vw,2.1rem)] shadow-[12px_14px_0_rgba(22,191,198,0.13),0_18px_35px_rgba(23,33,58,0.08)] max-sm:rounded-[1.25rem] max-sm:shadow-[7px_8px_0_rgba(22,191,198,0.13),0_14px_28px_rgba(23,33,58,0.07)]">
         <div className="mb-[1.35rem] flex items-center gap-3.5">
           <span
-            className="inline-flex size-[3.1rem] rotate-35 items-center justify-center rounded-[0.9rem] bg-[#dffafb] text-[1.55rem] text-[#087d84]"
+            className="inline-flex size-[3.1rem] rotate-35 items-center justify-center rounded-[0.9rem] bg-[#dffafb] text-2xl text-[#087d84]"
             aria-hidden="true"
           >
             ↗
           </span>
           <div>
-            <p className="mb-1 text-[0.8rem] font-extrabold tracking-[0.12em] text-primary uppercase">
+            <p className="mb-1 text-xs font-extrabold tracking-[0.12em] text-primary uppercase">
               Already have a poll?
             </p>
             <h2
               id="join-title"
-              className="m-0 font-display text-[clamp(1.5rem,3vw,2rem)] leading-none tracking-[-0.04em] text-ink"
+              className="m-0 font-display text-2xl leading-none tracking-[-0.04em] text-ink sm:text-3xl"
             >
               Join the conversation
             </h2>
@@ -66,7 +66,7 @@ export function JoinPollSection() {
         </div>
         <form onSubmit={handleJoin} noValidate>
           <label
-            className="mb-2 block text-[0.94rem] font-extrabold text-ink"
+            className="mb-2 block text-sm font-extrabold text-ink"
             htmlFor={inputId}
           >
             Poll ID or link
@@ -95,14 +95,14 @@ export function JoinPollSection() {
             </button>
           </div>
           <p
-            className="mt-2 text-[0.82rem] leading-[1.35] text-muted-ink"
+            className="mt-2 text-xs leading-[1.35] text-muted-ink"
             id={hintId}
           >
             Paste a link or enter the poll ID you received.
           </p>
           {error ? (
             <p
-              className="mt-2 text-[0.82rem] leading-[1.35] font-bold text-[#b53142]"
+              className="mt-2 text-xs leading-[1.35] font-bold text-[#b53142]"
               id={errorId}
               role="alert"
             >

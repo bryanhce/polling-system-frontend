@@ -12,10 +12,10 @@ export function LandingPage() {
       >
         <span className="absolute top-[22%] left-[4.5%] hidden size-4.25 rounded-full bg-primary opacity-80 sm:block" />
         <span className="absolute right-[6%] bottom-[21%] size-7 rounded-full bg-secondary" />
-        <span className="absolute bottom-[16%] left-[7%] text-[34px] leading-none text-highlight">
+        <span className="absolute bottom-[16%] left-[7%] text-4xl leading-none text-highlight">
           ✦
         </span>
-        <span className="absolute top-[18%] right-[4%] hidden text-[34px] leading-none text-secondary sm:block">
+        <span className="absolute top-[18%] right-[4%] hidden text-4xl leading-none text-secondary sm:block">
           ✦
         </span>
       </div>

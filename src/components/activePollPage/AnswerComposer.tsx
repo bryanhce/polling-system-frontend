@@ -55,7 +55,7 @@ export function AnswerComposer({
       </p>
       <form className="mt-4" onSubmit={handleSubmit} noValidate>
         <label
-          className="mb-2 block text-[0.94rem] font-extrabold text-ink"
+          className="mb-2 block text-sm font-extrabold text-ink"
           htmlFor={answerId}
         >
           Your answer{' '}
@@ -77,7 +77,7 @@ export function AnswerComposer({
           }}
           onBlur={() => setValidationError(validate(answer))}
         />
-        <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-[0.8rem] leading-[1.4] text-muted-ink">
+        <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs leading-[1.4] text-muted-ink">
           <span id={hintId}>
             Be thoughtful and specific. Up to {ANSWER_LIMIT} characters.
           </span>
@@ -87,7 +87,7 @@ export function AnswerComposer({
         </div>
         {displayedError ? (
           <p
-            className="mt-2 mb-0 text-[0.82rem] font-bold text-danger"
+            className="mt-2 mb-0 text-xs font-bold text-danger"
             id={errorId}
             role="alert"
           >

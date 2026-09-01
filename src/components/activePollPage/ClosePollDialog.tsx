@@ -38,7 +38,7 @@ export function ClosePollDialog({
       }}
     >
       <div className="p-6 sm:p-7">
-        <p className="m-0 text-[0.78rem] font-extrabold tracking-[0.12em] text-danger uppercase">
+        <p className="m-0 text-xs font-extrabold tracking-[0.12em] text-danger uppercase">
           Irreversible action
         </p>
         <h2

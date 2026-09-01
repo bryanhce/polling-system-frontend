@@ -1,4 +1,5 @@
 import type { PollAnswer } from '@/api/polls';
+import { AnswerListItem } from '@/components/activePollPage/AnswerListItem';
 
 interface AnswerFeedProps {
   answers: PollAnswer[];
@@ -19,11 +20,11 @@ export function AnswerFeed({
     <section aria-labelledby="answers-title">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="m-0 text-[0.78rem] font-extrabold tracking-[0.12em] text-secondary uppercase">
+          <p className="m-0 text-xs font-extrabold tracking-[0.12em] text-secondary uppercase">
             The conversation
           </p>
           <h2
-            className="mt-1 mb-0 font-display text-[clamp(1.7rem,3vw,2.35rem)] tracking-[-0.04em] text-ink"
+            className="mt-1 mb-0 font-display text-2xl tracking-[-0.04em] text-ink sm:text-3xl lg:text-4xl"
             id="answers-title"
           >
             Anonymous answers
@@ -32,7 +33,7 @@ export function AnswerFeed({
             className="m-0 text-sm leading-[1.45] text-muted-ink"
             aria-live="polite"
           >
-            {`${answers.length} ${answers.length === 1 ? 'voice' : 'voices'} heard.`}
+            {`${answers.length} ${answers.length === 1 ? 'voice' : 'voices'} heard`}
           </p>
         </div>
       </div>
@@ -63,12 +64,10 @@ export function AnswerFeed({
         {!error && answers.length > 0 ? (
           <ol className="mt-5 list-none space-y-3 p-0">
             {answers.map((item, index) => (
-              <li
-                className="rounded-2xl border border-border bg-surface px-4 py-4 text-[0.98rem] leading-[1.55] text-ink shadow-[4px_5px_0_rgba(23,33,58,0.04)]"
+              <AnswerListItem
                 key={`${item.answer}-${index}`}
-              >
-                {item.answer}
-              </li>
+                answer={item.answer}
+              />
             ))}
           </ol>
         ) : null}
