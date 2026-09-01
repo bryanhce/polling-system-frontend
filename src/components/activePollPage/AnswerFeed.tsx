@@ -32,7 +32,7 @@ export function AnswerFeed({
             className="m-0 text-sm leading-[1.45] text-muted-ink"
             aria-live="polite"
           >
-            {`${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} heard.`}
+            {`${answers.length} ${answers.length === 1 ? 'voice' : 'voices'} heard.`}
           </p>
         </div>
       </div>
