@@ -16,7 +16,6 @@ export function ActivePollPage() {
     answers,
     pageState,
     feedError,
-    isRefreshing,
     isLoadingMore,
     canLoadMore,
     answerError,
@@ -30,7 +29,6 @@ export function ActivePollPage() {
     copyLabel,
     canClose,
     loadInitial,
-    refreshAnswers,
     loadMoreAnswers,
     handleAnswerSubmit,
     handleClosePoll,
@@ -101,11 +99,9 @@ export function ActivePollPage() {
           <div className="min-w-0">
             <AnswerFeed
               answers={answers}
-              isRefreshing={isRefreshing}
               error={feedError}
               canLoadMore={canLoadMore}
               isLoadingMore={isLoadingMore}
-              onRefresh={() => void refreshAnswers()}
               onLoadMore={() => void loadMoreAnswers()}
             />
           </div>

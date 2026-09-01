@@ -4,3 +4,4 @@
 - Split large, complex React components and pages into a view component and a custom hook that encapsulates their behaviour, state, and side effects.
 - Use configured path aliases for all imports; do not use relative import paths.
 - When writing tests, name test cases using the Given-When-Then pattern (e.g., `given [precondition], when [action], then [expected outcome]`).
+- Errors should always be thrown or logged, never silently suppressed.

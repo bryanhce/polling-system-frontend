@@ -15,7 +15,8 @@ function getPollIdFromReference(reference: string): string | null {
     return decodedPollId && POLL_ID_PATTERN.test(decodedPollId)
       ? decodedPollId
       : null;
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse poll reference URL:', error);
     return null;
   }
 }

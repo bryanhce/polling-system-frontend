@@ -8,6 +8,7 @@ import {
   submitPollAnswer,
 } from '@/api/polls';
 import type { Poll, PollAnswer } from '@/api/polls';
+import { usePollEvents } from './usePollEvents';
 
 const ANSWER_PAGE_SIZE = 20;
 
@@ -87,6 +88,20 @@ export function useActivePollPage() {
   useEffect(() => {
     void loadInitial();
   }, [loadInitial]);
+
+  usePollEvents({
+    pollId,
+    enabled: poll?.status === 'active',
+    onAnswer: (newAnswer) => {
+      setAnswers((current) => [newAnswer, ...current]);
+    },
+    onPollClosed: () => {
+      setPoll((current) =>
+        current ? { ...current, status: 'closed' } : current
+      );
+      setClosedMessage('This poll is closed. The final answers are below.');
+    },
+  });
 
   const refreshAnswers = useCallback(async () => {
     if (!pollId) return;

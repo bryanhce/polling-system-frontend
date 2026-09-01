@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { AxiosError, type AxiosResponse } from 'axios';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as pollApi from '@/api/polls';
 import { useActivePollPage } from './useActivePollPage';
@@ -8,7 +8,7 @@ import { useActivePollPage } from './useActivePollPage';
 let currentPollId: string | undefined = 'poll-123';
 
 vi.mock('react-router', () => ({
-  useParams: () => ({ pollId: currentPollId })
+  useParams: () => ({ pollId: currentPollId }),
 }));
 
 function createAxiosError(status: number): AxiosError {
@@ -17,23 +17,66 @@ function createAxiosError(status: number): AxiosError {
   return error;
 }
 
+class MockEventSource {
+  url: string;
+  listeners: Record<string, ((event: MessageEvent) => void)[]> = {};
+  closed = false;
+
+  constructor(url: string) {
+    this.url = url;
+    mockEventSourceInstances.push(this);
+  }
+
+  addEventListener(type: string, listener: (event: MessageEvent) => void) {
+    if (!this.listeners[type]) {
+      this.listeners[type] = [];
+    }
+    this.listeners[type].push(listener);
+  }
+
+  removeEventListener(type: string, listener: (event: MessageEvent) => void) {
+    if (this.listeners[type]) {
+      this.listeners[type] = this.listeners[type].filter((l) => l !== listener);
+    }
+  }
+
+  close() {
+    this.closed = true;
+  }
+
+  emit(type: string, data: unknown) {
+    const event = {
+      data: typeof data === 'string' ? data : JSON.stringify(data),
+    } as MessageEvent;
+    this.listeners[type]?.forEach((listener) => listener(event));
+  }
+}
+
+let mockEventSourceInstances: MockEventSource[] = [];
+
 describe('useActivePollPage Hook Logic & Edge Cases', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     currentPollId = 'poll-123';
+    mockEventSourceInstances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
-  it('given an active poll ID, when hook mounts, then it fetches poll and answers and transitions to ready pageState', async () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('given an active poll ID, when hook mounts, then it fetches poll and answers, opens SSE connection, and transitions to ready pageState', async () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
       pollId: 'poll-123',
       question: 'Favorite food?',
       description: 'Open discussion',
-      status: 'active'
+      status: 'active',
     });
     vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([
       { answer: 'Pasta' },
-      { answer: 'Burgers' }
+      { answer: 'Burgers' },
     ]);
 
     const { result } = renderHook(() => useActivePollPage());
@@ -48,13 +91,117 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
       pollId: 'poll-123',
       question: 'Favorite food?',
       description: 'Open discussion',
-      status: 'active'
+      status: 'active',
     });
     expect(result.current.answers).toEqual([
       { answer: 'Pasta' },
-      { answer: 'Burgers' }
+      { answer: 'Burgers' },
     ]);
     expect(result.current.canLoadMore).toBe(false);
+    expect(mockEventSourceInstances).toHaveLength(1);
+    expect(mockEventSourceInstances[0].url).toContain(
+      '/api/v1/polls/poll-123/events'
+    );
+  });
+
+  it('given an active poll with SSE connected, when an answer event is emitted, then new answer is prepended', async () => {
+    vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
+      pollId: 'poll-123',
+      question: 'Favorite food?',
+      status: 'active',
+    });
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([
+      { answer: 'Initial answer' },
+    ]);
+
+    const { result } = renderHook(() => useActivePollPage());
+
+    await waitFor(() => {
+      expect(result.current.pageState).toBe('ready');
+    });
+
+    expect(mockEventSourceInstances).toHaveLength(1);
+    const es = mockEventSourceInstances[0];
+
+    act(() => {
+      es.emit('answer', { answer: 'Streamed pizza' });
+    });
+
+    expect(result.current.answers).toEqual([
+      { answer: 'Streamed pizza' },
+      { answer: 'Initial answer' },
+    ]);
+  });
+
+  it('given an active poll with SSE connected, when a poll_closed event is emitted, then status transitions to closed and SSE is closed', async () => {
+    vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
+      pollId: 'poll-123',
+      question: 'Favorite food?',
+      status: 'active',
+    });
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([
+      { answer: 'First' },
+    ]);
+
+    const { result } = renderHook(() => useActivePollPage());
+
+    await waitFor(() => {
+      expect(result.current.pageState).toBe('ready');
+    });
+
+    expect(mockEventSourceInstances).toHaveLength(1);
+    const es = mockEventSourceInstances[0];
+
+    act(() => {
+      es.emit('poll_closed', {});
+    });
+
+    expect(result.current.poll?.status).toBe('closed');
+    expect(result.current.closedMessage).toBe(
+      'This poll is closed. The final answers are below.'
+    );
+    expect(es.closed).toBe(true);
+  });
+
+  it('given an initial closed poll, when hook mounts, then EventSource is not opened', async () => {
+    vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
+      pollId: 'poll-123',
+      question: 'Favorite food?',
+      status: 'closed',
+    });
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([
+      { answer: 'Past answer' },
+    ]);
+
+    const { result } = renderHook(() => useActivePollPage());
+
+    await waitFor(() => {
+      expect(result.current.pageState).toBe('ready');
+    });
+
+    expect(mockEventSourceInstances).toHaveLength(0);
+  });
+
+  it('given an active SSE connection, when component unmounts, then EventSource is closed', async () => {
+    vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
+      pollId: 'poll-123',
+      question: 'Favorite food?',
+      status: 'active',
+    });
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([]);
+
+    const { result, unmount } = renderHook(() => useActivePollPage());
+
+    await waitFor(() => {
+      expect(result.current.pageState).toBe('ready');
+    });
+
+    expect(mockEventSourceInstances).toHaveLength(1);
+    const es = mockEventSourceInstances[0];
+    expect(es.closed).toBe(false);
+
+    unmount();
+    expect(es.closed).toBe(true);
   });
 
   it('given a 404 response on initial fetch, when hook mounts, then pageState is set to not-found', async () => {
@@ -79,15 +226,15 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
     });
   });
 
-  it('given a valid answer, when handleAnswerSubmit is called, then answer is submitted, hasAnswered is set to true, and feed is refreshed', async () => {
+  it('given a valid answer, when handleAnswerSubmit is called, then answer is submitted and hasAnswered is set to true', async () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValue({
       pollId: 'poll-123',
       question: 'Favorite food?',
-      status: 'active'
+      status: 'active',
     });
-    vi.spyOn(pollApi, 'getPollAnswers')
-      .mockResolvedValueOnce([{ answer: 'Pizza' }])
-      .mockResolvedValueOnce([{ answer: 'Pizza' }, { answer: 'Sushi' }]);
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([
+      { answer: 'Pizza' },
+    ]);
 
     const submitSpy = vi
       .spyOn(pollApi, 'submitPollAnswer')
@@ -106,14 +253,13 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
     expect(submitSpy).toHaveBeenCalledWith('poll-123', 'Sushi');
     expect(result.current.hasAnswered).toBe(true);
     expect(result.current.focusConfirmation).toBe(true);
-    expect(result.current.answers).toHaveLength(2);
   });
 
   it('given a closed poll responding with 403, when handleAnswerSubmit is called, then poll status transitions to closed and closedMessage is set', async () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
       pollId: 'poll-123',
       question: 'Favorite food?',
-      status: 'active'
+      status: 'active',
     });
     vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([]);
     vi.spyOn(pollApi, 'submitPollAnswer').mockRejectedValueOnce(
@@ -141,7 +287,7 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
       pollId: 'poll-123',
       question: 'Favorite food?',
-      status: 'active'
+      status: 'active',
     });
     vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([]);
     vi.spyOn(pollApi, 'submitPollAnswer').mockRejectedValueOnce(
@@ -169,7 +315,7 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
       pollId: 'poll-123',
       question: 'Favorite food?',
-      status: 'active'
+      status: 'active',
     });
     vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([]);
     const closeSpy = vi
@@ -203,7 +349,7 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
       pollId: 'poll-123',
       question: 'Favorite food?',
-      status: 'active'
+      status: 'active',
     });
     vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([]);
     vi.spyOn(pollApi, 'closePoll').mockRejectedValueOnce(createAxiosError(409));
@@ -231,7 +377,7 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
     vi.spyOn(pollApi, 'getPoll').mockResolvedValueOnce({
       pollId: 'poll-123',
       question: 'Favorite food?',
-      status: 'active'
+      status: 'active',
     });
     vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([]);
     vi.spyOn(pollApi, 'closePoll').mockRejectedValueOnce(createAxiosError(403));
@@ -255,8 +401,8 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
   it('given clipboard write success, when handleCopyLink is called, then copyLabel transitions to Link copied', async () => {
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined)
-      }
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
     });
 
     const { result } = renderHook(() => useActivePollPage());
@@ -274,8 +420,8 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
   it('given clipboard write failure, when handleCopyLink is called, then copyLabel transitions to Couldn’t copy', async () => {
     Object.assign(navigator, {
       clipboard: {
-        writeText: vi.fn().mockRejectedValue(new Error('Permission denied'))
-      }
+        writeText: vi.fn().mockRejectedValue(new Error('Permission denied')),
+      },
     });
 
     const { result } = renderHook(() => useActivePollPage());

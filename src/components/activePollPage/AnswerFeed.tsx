@@ -2,21 +2,17 @@ import type { PollAnswer } from '@/api/polls';
 
 interface AnswerFeedProps {
   answers: PollAnswer[];
-  isRefreshing: boolean;
   error: string;
   canLoadMore: boolean;
   isLoadingMore: boolean;
-  onRefresh: () => void;
   onLoadMore: () => void;
 }
 
 export function AnswerFeed({
   answers,
-  isRefreshing,
   error,
   canLoadMore,
   isLoadingMore,
-  onRefresh,
   onLoadMore,
 }: AnswerFeedProps) {
   return (
@@ -33,21 +29,13 @@ export function AnswerFeed({
             Anonymous answers
           </h2>
         </div>
-        <button
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-3.5 text-sm font-extrabold text-ink transition-colors hover:bg-[#f6f8fc] disabled:cursor-not-allowed disabled:opacity-60"
-          type="button"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          Refresh answers
-        </button>
       </div>
       <div className="mt-2 max-h-[calc(100svh-16rem)] overflow-y-auto pr-1 sm:pr-2">
         <p
           className="m-0 text-sm leading-[1.45] text-muted-ink"
           aria-live="polite"
         >
-          {`${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} loaded. Refresh to see the latest answers.`}
+          {`${answers.length} ${answers.length === 1 ? 'answer' : 'answers'} heard.`}
         </p>
         {error ? (
           <div
@@ -55,13 +43,6 @@ export function AnswerFeed({
             role="alert"
           >
             <p className="m-0 font-bold">{error}</p>
-            <button
-              className="mt-3 min-h-10 rounded-lg bg-surface px-3 text-sm font-extrabold text-ink"
-              type="button"
-              onClick={onRefresh}
-            >
-              Try again
-            </button>
           </div>
         ) : null}
 

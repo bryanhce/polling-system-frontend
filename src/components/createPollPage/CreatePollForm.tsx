@@ -56,7 +56,8 @@ export function CreatePollForm() {
         console.error("Error setting creator token", error)
       }
       navigate(`/polls/${encodeURIComponent(pollId)}`);
-    } catch {
+    } catch (error) {
+      console.error('Failed to create poll:', error);
       setFormError(
         'We couldn’t launch your poll just now. Your words are safe, please try again.'
       );
