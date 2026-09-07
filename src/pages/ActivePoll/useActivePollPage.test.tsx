@@ -3,6 +3,7 @@ import { AxiosError, type AxiosResponse } from 'axios';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as pollApi from '@/api/polls';
+import type { SSECallbacks } from '@/api/pollEvents';
 import { useActivePollPage } from './useActivePollPage';
 
 let currentPollId: string | undefined = 'poll-123';
@@ -11,60 +12,37 @@ vi.mock('react-router', () => ({
   useParams: () => ({ pollId: currentPollId }),
 }));
 
+vi.mock('@/api/pollEvents', () => ({
+  subscribeToPollEvents: vi.fn(),
+}));
+
+import { subscribeToPollEvents } from '@/api/pollEvents';
+
+const mockSubscribe = vi.mocked(subscribeToPollEvents);
+
 function createAxiosError(status: number): AxiosError {
   const error = new AxiosError(`Request failed with status code ${status}`);
   error.response = { status } as AxiosResponse;
   return error;
 }
 
-class MockEventSource {
-  url: string;
-  listeners: Record<string, ((event: MessageEvent) => void)[]> = {};
-  closed = false;
-
-  constructor(url: string) {
-    this.url = url;
-    mockEventSourceInstances.push(this);
-  }
-
-  addEventListener(type: string, listener: (event: MessageEvent) => void) {
-    if (!this.listeners[type]) {
-      this.listeners[type] = [];
-    }
-    this.listeners[type].push(listener);
-  }
-
-  removeEventListener(type: string, listener: (event: MessageEvent) => void) {
-    if (this.listeners[type]) {
-      this.listeners[type] = this.listeners[type].filter((l) => l !== listener);
-    }
-  }
-
-  close() {
-    this.closed = true;
-  }
-
-  emit(type: string, data: unknown) {
-    const event = {
-      data: typeof data === 'string' ? data : JSON.stringify(data),
-    } as MessageEvent;
-    this.listeners[type]?.forEach((listener) => listener(event));
-  }
-}
-
-let mockEventSourceInstances: MockEventSource[] = [];
+let capturedCallbacks: SSECallbacks;
+let mockUnsubscribe: ReturnType<typeof vi.fn>;
 
 describe('useActivePollPage Hook Logic & Edge Cases', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     currentPollId = 'poll-123';
-    mockEventSourceInstances = [];
-    vi.stubGlobal('EventSource', MockEventSource);
+    mockUnsubscribe = vi.fn();
+    mockSubscribe.mockImplementation((_pollId, callbacks) => {
+      capturedCallbacks = callbacks;
+      return mockUnsubscribe;
+    });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('given an active poll ID, when hook mounts, then it fetches poll and answers, opens SSE connection, and transitions to ready pageState', async () => {
@@ -98,10 +76,7 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
       { answer: 'Burgers' },
     ]);
     expect(result.current.canLoadMore).toBe(false);
-    expect(mockEventSourceInstances).toHaveLength(1);
-    expect(mockEventSourceInstances[0].url).toContain(
-      '/api/v1/polls/poll-123/events'
-    );
+    expect(mockSubscribe).toHaveBeenCalledWith('poll-123', expect.any(Object));
   });
 
   it('given an active poll with SSE connected, when an answer event is emitted, then new answer is prepended', async () => {
@@ -120,11 +95,10 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
       expect(result.current.pageState).toBe('ready');
     });
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    const es = mockEventSourceInstances[0];
+    expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
     act(() => {
-      es.emit('answer', { answer: 'Streamed pizza' });
+      capturedCallbacks.onAnswer?.({ answer: 'Streamed pizza' });
     });
 
     expect(result.current.answers).toEqual([
@@ -149,18 +123,16 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
       expect(result.current.pageState).toBe('ready');
     });
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    const es = mockEventSourceInstances[0];
+    expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
     act(() => {
-      es.emit('poll_closed', {});
+      capturedCallbacks.onPollClosed?.();
     });
 
     expect(result.current.poll?.status).toBe('closed');
     expect(result.current.closedMessage).toBe(
       'This poll is closed. The final answers are below.'
     );
-    expect(es.closed).toBe(true);
   });
 
   it('given an initial closed poll, when hook mounts, then EventSource is not opened', async () => {
@@ -179,7 +151,7 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
       expect(result.current.pageState).toBe('ready');
     });
 
-    expect(mockEventSourceInstances).toHaveLength(0);
+    expect(mockSubscribe).not.toHaveBeenCalled();
   });
 
   it('given an active SSE connection, when component unmounts, then EventSource is closed', async () => {
@@ -196,12 +168,11 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
       expect(result.current.pageState).toBe('ready');
     });
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    const es = mockEventSourceInstances[0];
-    expect(es.closed).toBe(false);
+    expect(mockSubscribe).toHaveBeenCalledTimes(1);
+    expect(mockUnsubscribe).not.toHaveBeenCalled();
 
     unmount();
-    expect(es.closed).toBe(true);
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('given a 404 response on initial fetch, when hook mounts, then pageState is set to not-found', async () => {

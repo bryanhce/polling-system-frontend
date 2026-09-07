@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createPollEventSource } from '@/api/pollEvents';
+import { subscribeToPollEvents } from '@/api/pollEvents';
 import type { PollAnswer } from '@/api/polls';
 
 export interface UsePollEventsOptions {
@@ -8,9 +8,6 @@ export interface UsePollEventsOptions {
   onAnswer?: (answer: PollAnswer) => void;
   onPollClosed?: () => void;
 }
-
-const answerEvent = "answer"
-const closePollEvent = "poll_closed"
 
 export function usePollEvents({
   pollId,
@@ -31,27 +28,18 @@ export function usePollEvents({
       return;
     }
 
-    const eventSource = createPollEventSource(pollId);
-
-    eventSource.addEventListener(answerEvent, (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data) as PollAnswer;
-        if (data && typeof data.answer === 'string') {
-          onAnswerRef.current?.(data);
-        }
-      } catch (error) {
-        // Silently ignore malformed SSE event payloads
-        console.error("Error with server sent events", error)
-      }
-    });
-
-    eventSource.addEventListener(closePollEvent, () => {
-      onPollClosedRef.current?.();
-      eventSource.close();
+    const unsubscribe = subscribeToPollEvents(pollId, {
+      onAnswer: (data) => {
+        onAnswerRef.current?.(data);
+      },
+      onPollClosed: () => {
+        onPollClosedRef.current?.();
+      },
     });
 
     return () => {
-      eventSource.close();
+      unsubscribe();
     };
   }, [pollId, enabled]);
 }
+

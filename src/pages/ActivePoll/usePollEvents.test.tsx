@@ -2,56 +2,34 @@ import { renderHook, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { usePollEvents } from './usePollEvents';
+import type { SSECallbacks } from '@/api/pollEvents';
 
-class MockEventSource {
-  url: string;
-  listeners: Record<string, ((event: MessageEvent) => void)[]> = {};
-  closed = false;
+vi.mock('@/api/pollEvents', () => ({
+  subscribeToPollEvents: vi.fn(),
+}));
 
-  constructor(url: string) {
-    this.url = url;
-    mockEventSourceInstances.push(this);
-  }
+import { subscribeToPollEvents } from '@/api/pollEvents';
 
-  addEventListener(type: string, listener: (event: MessageEvent) => void) {
-    if (!this.listeners[type]) {
-      this.listeners[type] = [];
-    }
-    this.listeners[type].push(listener);
-  }
-
-  removeEventListener(type: string, listener: (event: MessageEvent) => void) {
-    if (this.listeners[type]) {
-      this.listeners[type] = this.listeners[type].filter((l) => l !== listener);
-    }
-  }
-
-  close() {
-    this.closed = true;
-  }
-
-  emit(type: string, data: unknown) {
-    const event = {
-      data: typeof data === 'string' ? data : JSON.stringify(data),
-    } as MessageEvent;
-    this.listeners[type]?.forEach((listener) => listener(event));
-  }
-}
-
-let mockEventSourceInstances: MockEventSource[] = [];
+const mockSubscribe = vi.mocked(subscribeToPollEvents);
 
 describe('usePollEvents Hook', () => {
+  let capturedCallbacks: SSECallbacks;
+  let mockUnsubscribe: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mockEventSourceInstances = [];
-    vi.stubGlobal('EventSource', MockEventSource);
+    mockUnsubscribe = vi.fn();
+    mockSubscribe.mockImplementation((_pollId, callbacks) => {
+      capturedCallbacks = callbacks;
+      return mockUnsubscribe;
+    });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it('given enabled is false, when hook mounts, then it does not create EventSource', () => {
+  it('given enabled is false, when hook mounts, then it does not subscribe', () => {
     renderHook(() =>
       usePollEvents({
         pollId: 'poll-123',
@@ -59,10 +37,10 @@ describe('usePollEvents Hook', () => {
       })
     );
 
-    expect(mockEventSourceInstances).toHaveLength(0);
+    expect(mockSubscribe).not.toHaveBeenCalled();
   });
 
-  it('given no pollId, when hook mounts, then it does not create EventSource', () => {
+  it('given no pollId, when hook mounts, then it does not subscribe', () => {
     renderHook(() =>
       usePollEvents({
         pollId: undefined,
@@ -70,10 +48,10 @@ describe('usePollEvents Hook', () => {
       })
     );
 
-    expect(mockEventSourceInstances).toHaveLength(0);
+    expect(mockSubscribe).not.toHaveBeenCalled();
   });
 
-  it('given valid pollId and enabled is true, when hook mounts, then it creates EventSource for poll events', () => {
+  it('given valid pollId and enabled is true, when hook mounts, then it subscribes to poll events', () => {
     renderHook(() =>
       usePollEvents({
         pollId: 'poll-abc',
@@ -81,13 +59,10 @@ describe('usePollEvents Hook', () => {
       })
     );
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    expect(mockEventSourceInstances[0].url).toContain(
-      '/api/v1/polls/poll-abc/events'
-    );
+    expect(mockSubscribe).toHaveBeenCalledWith('poll-abc', expect.any(Object));
   });
 
-  it('given active EventSource, when answer event arrives, then onAnswer callback is invoked with parsed data', () => {
+  it('given active subscription, when answer event arrives, then onAnswer callback is invoked with parsed data', () => {
     const onAnswer = vi.fn();
 
     renderHook(() =>
@@ -98,17 +73,16 @@ describe('usePollEvents Hook', () => {
       })
     );
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    const es = mockEventSourceInstances[0];
+    expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
     act(() => {
-      es.emit('answer', { answer: 'Delicious Tacos' });
+      capturedCallbacks.onAnswer?.({ answer: 'Delicious Tacos' });
     });
 
     expect(onAnswer).toHaveBeenCalledWith({ answer: 'Delicious Tacos' });
   });
 
-  it('given active EventSource, when poll_closed event arrives, then onPollClosed is called and EventSource is closed', () => {
+  it('given active subscription, when poll_closed event arrives, then onPollClosed is called', () => {
     const onPollClosed = vi.fn();
 
     renderHook(() =>
@@ -119,18 +93,16 @@ describe('usePollEvents Hook', () => {
       })
     );
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    const es = mockEventSourceInstances[0];
+    expect(mockSubscribe).toHaveBeenCalledTimes(1);
 
     act(() => {
-      es.emit('poll_closed', {});
+      capturedCallbacks.onPollClosed?.();
     });
 
     expect(onPollClosed).toHaveBeenCalled();
-    expect(es.closed).toBe(true);
   });
 
-  it('given active EventSource, when component unmounts, then EventSource is closed', () => {
+  it('given active subscription, when component unmounts, then unsubscribe is called', () => {
     const { unmount } = renderHook(() =>
       usePollEvents({
         pollId: 'poll-abc',
@@ -138,11 +110,11 @@ describe('usePollEvents Hook', () => {
       })
     );
 
-    expect(mockEventSourceInstances).toHaveLength(1);
-    const es = mockEventSourceInstances[0];
-    expect(es.closed).toBe(false);
+    expect(mockSubscribe).toHaveBeenCalledTimes(1);
+    expect(mockUnsubscribe).not.toHaveBeenCalled();
 
     unmount();
-    expect(es.closed).toBe(true);
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
   });
 });
+
