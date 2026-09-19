@@ -94,10 +94,7 @@ export function JoinPollSection() {
               Join poll <span aria-hidden="true">→</span>
             </button>
           </div>
-          <p
-            className="mt-2 text-xs leading-[1.35] text-muted-ink"
-            id={hintId}
-          >
+          <p className="mt-2 text-xs leading-[1.35] text-muted-ink" id={hintId}>
             Paste a link or enter the poll ID you received.
           </p>
           {error ? (

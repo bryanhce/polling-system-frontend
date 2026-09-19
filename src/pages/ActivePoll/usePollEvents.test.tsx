@@ -117,4 +117,3 @@ describe('usePollEvents Hook', () => {
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
   });
 });
-

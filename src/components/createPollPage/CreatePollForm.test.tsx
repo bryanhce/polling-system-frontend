@@ -8,12 +8,11 @@ import { CreatePollForm } from './CreatePollForm';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>(
-    'react-router'
-  );
+  const actual =
+    await vi.importActual<typeof import('react-router')>('react-router');
   return {
     ...actual,
-    useNavigate: () => mockNavigate
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -116,10 +115,12 @@ describe('CreatePollForm Component Logic & Edge Cases', () => {
 
   it('given valid question and description, when user submits form, then it creates poll, persists creator token in localStorage, and navigates', async () => {
     const user = userEvent.setup();
-    const createPollSpy = vi.spyOn(pollApi, 'createPoll').mockResolvedValueOnce({
-      pollId: 'test-poll-id-123',
-      creatorToken: 'test-creator-token-456'
-    });
+    const createPollSpy = vi
+      .spyOn(pollApi, 'createPoll')
+      .mockResolvedValueOnce({
+        pollId: 'test-poll-id-123',
+        creatorToken: 'test-creator-token-456',
+      });
 
     render(
       <MemoryRouter>
@@ -134,7 +135,10 @@ describe('CreatePollForm Component Logic & Edge Cases', () => {
       'Add helpful context, if you’d like.'
     );
 
-    await user.type(questionInput, 'What is your favourite programming language?');
+    await user.type(
+      questionInput,
+      'What is your favourite programming language?'
+    );
     await user.type(descriptionInput, 'Feel free to explain why.');
 
     const submitButton = screen.getByRole('button', { name: /Launch poll/i });
@@ -143,7 +147,7 @@ describe('CreatePollForm Component Logic & Edge Cases', () => {
     await waitFor(() => {
       expect(createPollSpy).toHaveBeenCalledWith({
         question: 'What is your favourite programming language?',
-        description: 'Feel free to explain why.'
+        description: 'Feel free to explain why.',
       });
       expect(localStorage.getItem('aethelgard-voice-test-poll-id-123')).toBe(
         'test-creator-token-456'

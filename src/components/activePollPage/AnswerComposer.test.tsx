@@ -73,7 +73,10 @@ describe('AnswerComposer Component Logic & Edge Cases', () => {
     await user.click(submitButton);
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
-    expect(onSubmit).toHaveBeenCalledWith('This is my thoughtful response', false);
+    expect(onSubmit).toHaveBeenCalledWith(
+      'This is my thoughtful response',
+      false
+    );
   });
 
   it('given valid input, when user submits via Enter key on the submit button, then onSubmit is called with initiatedWithKeyboard true', async () => {
@@ -134,7 +137,7 @@ describe('AnswerComposer Component Logic & Edge Cases', () => {
     render(<AnswerComposer isSubmitting={true} error="" onSubmit={vi.fn()} />);
 
     const submitButton = screen.getByRole('button', {
-      name: /Sending answer…/i
+      name: /Sending answer…/i,
     });
     expect(submitButton).toBeDisabled();
   });

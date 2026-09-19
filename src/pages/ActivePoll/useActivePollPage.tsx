@@ -1,5 +1,5 @@
-import { isAxiosError } from 'axios';
-import { useCallback, useEffect, useState } from 'react';
+import { isAxiosError, isCancel } from 'axios';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import {
   closePoll,
@@ -51,7 +51,6 @@ export function useActivePollPage() {
     'loading' | 'ready' | 'not-found' | 'error'
   >('loading');
   const [feedError, setFeedError] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [canLoadMore, setCanLoadMore] = useState(false);
   const [answerError, setAnswerError] = useState('');
@@ -64,29 +63,59 @@ export function useActivePollPage() {
   const [closeError, setCloseError] = useState('');
   const [copyLabel, setCopyLabel] = useState('Copy link');
 
-  const loadInitial = useCallback(async () => {
-    if (!pollId) {
-      setPageState('not-found');
-      return;
-    }
-    setPageState('loading');
-    setFeedError('');
-    try {
-      const [nextPoll, nextAnswers] = await Promise.all([
-        getPoll(pollId),
-        getPollAnswers(pollId, ANSWER_PAGE_SIZE, 0),
-      ]);
-      setPoll(nextPoll);
-      setAnswers(nextAnswers);
-      setCanLoadMore(nextAnswers.length === ANSWER_PAGE_SIZE);
-      setPageState('ready');
-    } catch (error) {
-      setPageState(statusCode(error) === 404 ? 'not-found' : 'error');
-    }
-  }, [pollId]);
+  const loadAbortControllerRef = useRef<AbortController | null>(null);
+  const refreshAbortControllerRef = useRef<AbortController | null>(null);
+  const loadMoreAbortControllerRef = useRef<AbortController | null>(null);
+
+  const loadInitial = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!pollId) {
+        setPageState('not-found');
+        return;
+      }
+
+      loadAbortControllerRef.current?.abort();
+      const controller = new AbortController();
+      loadAbortControllerRef.current = controller;
+
+      if (signal) {
+        if (signal.aborted) {
+          controller.abort();
+        } else {
+          signal.addEventListener('abort', () => controller.abort(), {
+            once: true,
+          });
+        }
+      }
+
+      setPageState('loading');
+      setFeedError('');
+      try {
+        const [nextPoll, nextAnswers] = await Promise.all([
+          getPoll(pollId, controller.signal),
+          getPollAnswers(pollId, ANSWER_PAGE_SIZE, 0, controller.signal),
+        ]);
+        setPoll(nextPoll);
+        setAnswers(nextAnswers);
+        setCanLoadMore(nextAnswers.length === ANSWER_PAGE_SIZE);
+        setPageState('ready');
+      } catch (error) {
+        if (isCancel(error) || controller.signal.aborted) {
+          return;
+        }
+        setPageState(statusCode(error) === 404 ? 'not-found' : 'error');
+      }
+    },
+    [pollId]
+  );
 
   useEffect(() => {
     void loadInitial();
+    return () => {
+      loadAbortControllerRef.current?.abort();
+      refreshAbortControllerRef.current?.abort();
+      loadMoreAbortControllerRef.current?.abort();
+    };
   }, [loadInitial]);
 
   usePollEvents({
@@ -105,47 +134,63 @@ export function useActivePollPage() {
 
   const refreshAnswers = useCallback(async () => {
     if (!pollId) return;
-    setIsRefreshing(true);
+
+    refreshAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    refreshAbortControllerRef.current = controller;
+
     setFeedError('');
     try {
       const [nextPoll, nextAnswers] = await Promise.all([
-        getPoll(pollId),
-        getPollAnswers(pollId, ANSWER_PAGE_SIZE, 0),
+        getPoll(pollId, controller.signal),
+        getPollAnswers(pollId, ANSWER_PAGE_SIZE, 0, controller.signal),
       ]);
       setPoll(nextPoll);
       setAnswers(nextAnswers);
       setCanLoadMore(nextAnswers.length === ANSWER_PAGE_SIZE);
     } catch (error) {
+      if (isCancel(error) || controller.signal.aborted) {
+        return;
+      }
       if (statusCode(error) === 404) setPageState('not-found');
       else
         setFeedError(
           'We couldn’t refresh the answers just now. Please try again.'
         );
-    } finally {
-      setIsRefreshing(false);
     }
   }, [pollId]);
 
   async function loadMoreAnswers() {
     if (!pollId || isLoadingMore) return;
+
+    loadMoreAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    loadMoreAbortControllerRef.current = controller;
+
     setIsLoadingMore(true);
     setFeedError('');
     try {
       const nextAnswers = await getPollAnswers(
         pollId,
         ANSWER_PAGE_SIZE,
-        answers.length
+        answers.length,
+        controller.signal
       );
       setAnswers((current) => [...current, ...nextAnswers]);
       setCanLoadMore(nextAnswers.length === ANSWER_PAGE_SIZE);
     } catch (error) {
+      if (isCancel(error) || controller.signal.aborted) {
+        return;
+      }
       if (statusCode(error) === 404) setPageState('not-found');
       else
         setFeedError(
           'We couldn’t load more answers just now. Please try again.'
         );
     } finally {
-      setIsLoadingMore(false);
+      if (!controller.signal.aborted) {
+        setIsLoadingMore(false);
+      }
     }
   }
 
@@ -247,7 +292,6 @@ export function useActivePollPage() {
     answers,
     pageState,
     feedError,
-    isRefreshing,
     isLoadingMore,
     canLoadMore,
     answerError,
@@ -261,7 +305,6 @@ export function useActivePollPage() {
     copyLabel,
     canClose,
     loadInitial,
-    refreshAnswers,
     loadMoreAnswers,
     handleAnswerSubmit,
     handleClosePoll,

@@ -403,4 +403,134 @@ describe('useActivePollPage Hook Logic & Edge Cases', () => {
 
     expect(result.current.copyLabel).toBe('Couldn’t copy');
   });
+
+  it('given an in-flight loadInitial, when component unmounts, then the requests are aborted and pageState does not become error', async () => {
+    let capturedPollSignal: AbortSignal | undefined;
+    let capturedAnswersSignal: AbortSignal | undefined;
+
+    vi.spyOn(pollApi, 'getPoll').mockImplementation((_id, signal) => {
+      capturedPollSignal = signal;
+      return new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => {
+          const cancelError = new AxiosError('canceled', 'ERR_CANCELED');
+          reject(cancelError);
+        });
+      });
+    });
+
+    vi.spyOn(pollApi, 'getPollAnswers').mockImplementation(
+      (_id, _limit, _offset, signal) => {
+        capturedAnswersSignal = signal;
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => {
+            const cancelError = new AxiosError('canceled', 'ERR_CANCELED');
+            reject(cancelError);
+          });
+        });
+      }
+    );
+
+    const { result, unmount } = renderHook(() => useActivePollPage());
+
+    expect(result.current.pageState).toBe('loading');
+    expect(capturedPollSignal).toBeDefined();
+    expect(capturedPollSignal?.aborted).toBe(false);
+    expect(capturedAnswersSignal).toBeDefined();
+    expect(capturedAnswersSignal?.aborted).toBe(false);
+
+    unmount();
+
+    expect(capturedPollSignal?.aborted).toBe(true);
+    expect(capturedAnswersSignal?.aborted).toBe(true);
+    expect(result.current.pageState).toBe('loading');
+  });
+
+  it('given an in-flight refresh triggered after answer submission, when component unmounts, then the request is aborted and feedError is not set', async () => {
+    vi.spyOn(pollApi, 'getPoll').mockResolvedValue({
+      pollId: 'poll-123',
+      question: 'Favorite food?',
+      status: 'active',
+    });
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce([
+      { answer: 'Pasta' },
+    ]);
+    vi.spyOn(pollApi, 'submitPollAnswer').mockResolvedValueOnce(undefined);
+
+    const { result, unmount } = renderHook(() => useActivePollPage());
+
+    await waitFor(() => {
+      expect(result.current.pageState).toBe('ready');
+    });
+
+    let refreshSignal: AbortSignal | undefined;
+    vi.spyOn(pollApi, 'getPollAnswers').mockImplementation(
+      (_id, _limit, _offset, signal) => {
+        refreshSignal = signal;
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => {
+            const cancelError = new AxiosError('canceled', 'ERR_CANCELED');
+            reject(cancelError);
+          });
+        });
+      }
+    );
+
+    void act(() => {
+      void result.current.handleAnswerSubmit('Sushi', false);
+    });
+
+    await waitFor(() => {
+      expect(refreshSignal).toBeDefined();
+    });
+    expect(refreshSignal?.aborted).toBe(false);
+
+    unmount();
+
+    expect(refreshSignal?.aborted).toBe(true);
+    expect(result.current.feedError).toBe('');
+  });
+
+  it('given an in-flight loadMoreAnswers, when component unmounts, then the request is aborted and feedError is not set', async () => {
+    vi.spyOn(pollApi, 'getPoll').mockResolvedValue({
+      pollId: 'poll-123',
+      question: 'Favorite food?',
+      status: 'active',
+    });
+    vi.spyOn(pollApi, 'getPollAnswers').mockResolvedValueOnce(
+      Array.from({ length: 20 }, (_, index) => ({ answer: `Answer ${index}` }))
+    );
+
+    const { result, unmount } = renderHook(() => useActivePollPage());
+
+    await waitFor(() => {
+      expect(result.current.pageState).toBe('ready');
+    });
+
+    expect(result.current.canLoadMore).toBe(true);
+
+    let loadMoreSignal: AbortSignal | undefined;
+    vi.spyOn(pollApi, 'getPollAnswers').mockImplementation(
+      (_id, _limit, _offset, signal) => {
+        loadMoreSignal = signal;
+        return new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => {
+            const cancelError = new AxiosError('canceled', 'ERR_CANCELED');
+            reject(cancelError);
+          });
+        });
+      }
+    );
+
+    void act(() => {
+      void result.current.loadMoreAnswers();
+    });
+
+    expect(loadMoreSignal).toBeDefined();
+    expect(loadMoreSignal?.aborted).toBe(false);
+
+    unmount();
+
+    expect(loadMoreSignal?.aborted).toBe(true);
+    expect(result.current.feedError).toBe('');
+  });
 });

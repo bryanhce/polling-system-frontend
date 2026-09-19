@@ -53,7 +53,7 @@ export function CreatePollForm() {
         localStorage.setItem(`aethelgard-voice-${pollId}`, creatorToken);
       } catch (error) {
         // Best-effort storage for private browsing or restricted environments
-        console.error("Error setting creator token", error)
+        console.error('Error setting creator token', error);
       }
       navigate(`/polls/${encodeURIComponent(pollId)}`);
     } catch (error) {

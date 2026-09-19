@@ -34,10 +34,7 @@ export function PollTextarea({
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <label
-          className="text-sm font-extrabold text-ink"
-          htmlFor={fieldId}
-        >
+        <label className="text-sm font-extrabold text-ink" htmlFor={fieldId}>
           {label}{' '}
           {required ? (
             <span className="text-danger" aria-label="required">
@@ -67,10 +64,7 @@ export function PollTextarea({
         required={required}
         maxLength={limit + 1}
       />
-      <p
-        id={hintId}
-        className="mt-2 mb-0 text-xs leading-[1.4] text-muted-ink"
-      >
+      <p id={hintId} className="mt-2 mb-0 text-xs leading-[1.4] text-muted-ink">
         {hint}
       </p>
       {error ? (

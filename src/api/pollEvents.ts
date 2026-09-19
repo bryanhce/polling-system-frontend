@@ -9,9 +9,10 @@ function getPollEventsUrl(pollId: string): string {
   return `${baseUrl}/api/v1/polls/${encodeURIComponent(pollId)}/events`;
 }
 
-
-const answerEvent = "answer"
-const closePollEvent = "poll_closed"
+const answerEvent = 'answer';
+const closePollEvent = 'poll_closed';
+const payloadEventStartingIdx = 7;
+const payloadDataStartingIdx = 6;
 
 /**
  * Connects to the poll SSE stream using fetch instead of native EventSource.
@@ -38,7 +39,9 @@ export function subscribeToPollEvents(
       });
 
       if (!response.ok || !response.body) {
-        callbacks.onError?.(new Error(`SSE connection failed: ${response.status}`));
+        callbacks.onError?.(
+          new Error(`SSE connection failed: ${response.status}`)
+        );
         return;
       }
 
@@ -62,9 +65,9 @@ export function subscribeToPollEvents(
 
           for (const line of block.split('\n')) {
             if (line.startsWith('event: ')) {
-              eventType = line.slice(7);
+              eventType = line.slice(payloadEventStartingIdx);
             } else if (line.startsWith('data: ')) {
-              data = line.slice(6);
+              data = line.slice(payloadDataStartingIdx);
             }
           }
 
